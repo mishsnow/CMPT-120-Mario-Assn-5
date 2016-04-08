@@ -1,0 +1,334 @@
+# Assignment 5 (Pt. 1 & 2)
+# My_Mario_Version_2.py
+#
+# Program Description: The goal of the game is to allow the player to move Mario through
+# the maze s.t. Mario reaches the exit gate with the highest score possible.
+# The game begins with a score of 10 and terminates (and the player loses) as soon as
+# Marioâ€™s score is reduced to 0.
+#
+# By: Michelle Chen and Hanqing Liu(Kevin)
+# April 6, 2016 (W)
+
+# -------------------------------------------------------------------------------------
+# 
+# -------------------------------------------------------------------------------------
+
+
+# Define functions
+def createMaze(aWidth, aHeight, cellContent):
+    '''
+    List of list is created to encompass rows/columns of cellContent (generalized)
+    Note: This is the template we will use to build upon our maze
+    
+    '''
+    aMaze = [[(cellContent) for i in range(aWidth)] for j in range(aHeight)]
+    # print(aMaze)  # For debugging purposes
+    return aMaze
+
+def createBoundary(aWidth, boundaryContent):
+    '''
+    Creates and returns 2 lists that contains the top and bottom
+    boundary of our maze.
+    Note: Each element of these 2 lists is a string set to "boundaryContent".
+
+    '''
+    return list([[(boundaryContent) for number in range(aWidth)],[(boundaryContent) for number in range(aWidth)]])
+
+def insertReward(aMaze, location, RewardSymbol):
+    '''
+    Splits Mario's input location into a list and appends rewarding symbols to aMaze[row][column]
+    
+    '''
+    locationList = location.split()
+    #print(locationList)    # For debugging purposes
+    aMaze[int(locationList[0])][int(locationList[1])] = RewardSymbol
+    return aMaze
+
+def insertExplode(aMaze, location, ExplodeSymbol):
+    '''
+    Splits Mario's input location into a list and appends exploding symbols to aMaze[row][column]
+    
+    '''
+    locationList = location.split()
+    #print(locationList)    # For debugging purposes
+    aMaze[int(locationList[0])][int(locationList[1])] = ExplodeSymbol
+    return aMaze
+
+def placeInMaze(aMaze, aContent):
+ 
+    aMaze[row][col] = aContent
+    return aMaze
+
+def displayMaze(aMaze, aWidth, aHeight, hBoundary, boundarySideContent,numOfE):
+    topIndex = 0
+    bottomIndex = 1
+    offset = 2
+    aString = ""
+    aString = (len(str(aHeight)) + offset) * " "
+    print()
+
+    # Display a row of numbers from 1 to aWidth
+    for column in range(aWidth):
+        aString = aString + str(column+1) + " "
+        if len(str(column+1)) == 1 :
+            aString += " "
+    print(aString)
+
+    # Display the top boundary of maze
+    print((len(str(aHeight)) + offset - 1) * " " + "".join(hBoundary[topIndex]))
+
+    # For each row of the maze:
+    # Display a column number (from 1 to aHeight) + left boundary symbol + content of this row of the maze + right boundary symbol
+    for row in range(aHeight):
+        pre = str(row+1) + " " + boundarySideContent
+        if row > 8 :
+           pre = str(row+1) + boundarySideContent
+        post = boundarySideContent
+        aRow = pre + ''.join(aMaze[row]) + post
+        print(aRow)
+
+    # Display the bottom boundary of maze
+    print((len(str(aHeight)) + offset - 1) * " " + "".join(hBoundary[bottomIndex]))
+
+    return
+
+def exitGate(exitSymbol, aWidth, aHeight, hBoundary):
+
+    if row <= round(aHeight/2):
+        if col <= round(aWidth/2):
+            hBoundary[1][aWidth-1] = exitSymbol
+        else:
+            hBoundary[1][0] = exitSymbol
+    else:
+        if col <= round(aWidth/2):
+            hBoundary[0][aWidth - 1] = exitSymbol
+        else:
+            hBoundary[0][0] = exitSymbol
+        
+    return hBoundary
+
+def openFile():
+    '''
+    Opens user input file, reads file as a list, then closes file
+    
+    '''
+    filename = input("Please enter the file name: ")
+    dataFile = open(filename, 'r')
+    dataList = []
+    for line in dataFile:
+        dataList.append(line.replace("\n", ''))
+    # print(dataList)    # For debugging purposes
+    dataFile.close()
+
+    return dataList
+
+
+# -------------------------------------------------------------------------------------
+# MAIN PROGRAM
+# -------------------------------------------------------------------------------------
+
+# Welcome the user.
+print("Welcome to my Mario Game.\n")
+
+# Ask for file name and read file content.
+dataList = openFile()
+
+# Set variables
+mazeWidth = int(dataList[0])
+mazeHeight = int(dataList[1])
+global row
+global col
+location = str(dataList[11]).split()
+row = int(location[0])
+col = int(location[1]) 
+
+# Create a maze.    
+theMaze = createMaze(mazeWidth, mazeHeight, dataList[4])
+#print(theMaze) # For debugging purposes
+
+# Create a boundary.
+hBoundary = createBoundary(mazeWidth, dataList[9])
+# print(hBoundary) # For debugging purposes
+
+# Insert rewarding and exploding symbols.
+for element in dataList[12: 12 + int(dataList[2])+1]:
+    insertReward(theMaze, element, dataList[5])
+
+for element in dataList[12 + int(dataList[2])+1:]:
+    insertExplode(theMaze, element, dataList[6])
+
+# Appends Mario symbol, location and exit gate in maze.
+theMaze = placeInMaze(theMaze, dataList[7])
+hBoundary = exitGate(dataList[8], mazeWidth, mazeHeight, hBoundary)
+
+# Display the maze.
+displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+
+# For users playing games.
+marioScore = int(int(dataList[3]) / 3)
+notDone = True
+
+while notDone:
+    askPosition = input("""Move Mario by entering the letter 'r' for right, 'l' for left,
+'u' for up and 'd' for down, 'x' to exit the game: """)
+        
+    if len(askPosition) == 0:   # Tests Enter key
+        notDone
+    
+    elif len(askPosition) == 1:
+        if marioScore > 0:
+             if askPosition.isalpha():
+                if askPosition.upper() == 'U':
+                    theMaze[row][col] = dataList[4]
+                    row -= 1
+                    #print(row)
+                    
+                    # If Mario simply moves up in maze
+                    if row >= 0:
+                        if theMaze[row][col] == dataList[4]:
+                            theMaze = placeInMaze(theMaze, dataList[7])
+                            displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                            print("Mario's score -> {}.\n".format(marioScore))
+                         # If Mario encounters reward or exploding obstacle.
+                        elif theMaze[row][col] == dataList[5] or theMaze[row][col] == dataList[6]:
+                            locaList = str(row) + " " + str(col)
+                            if locaList in dataList[12: 12 + int(dataList[2])+1]:
+                                marioScore += 1
+                                theMaze = placeInMaze(theMaze, dataList[7])
+                                displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                                print("Mario's score -> {}.\n".format(marioScore))
+                            elif locaList in dataList[12 + int(dataList[2])+1:]:
+                                marioScore -= 1
+                                theMaze = placeInMaze(theMaze, dataList[7])
+                                displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                                print("Mario's score -> {}.\n".format(marioScore))
+                    # If Mario touches horizontal boundaries (stays in place)
+                    else:                            
+                        # If Mario touches horizontal boundary
+                        if hBoundary[0][col] == dataList[9]:
+                            row +=1
+                            theMaze = placeInMaze(theMaze, dataList[7])
+                            displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                            print("Mario's score -> {}.\n".format(marioScore))
+                        # If Mario touches exit gate 
+                        elif hBoundary[0][col] == dataList[8]:
+                            row +=1
+                            theMaze = placeInMaze(theMaze, dataList[7])
+                            displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                            print("Mario has reached the exit gate with a score of {}! You win!".format(marioScore))
+                            notDone = False
+
+                # Moving down
+                elif askPosition.upper() == 'D':
+                    theMaze[row][col] = dataList[4]
+                    row += 1
+                    #print(row)
+                    
+                    # If Mario simply moves up in maze
+                    if row <= mazeHeight - 1:
+                        if theMaze[row][col] == dataList[4]:
+                            theMaze = placeInMaze(theMaze, dataList[7])
+                            displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                            print("Mario's score -> {}.\n".format(marioScore))
+                        # If Mario encounters reward or exploding obstacle.
+                        elif theMaze[row][col] == dataList[5] or theMaze[row][col] == dataList[6]:
+                            locaList = str(row) + " " + str(col)
+                            if locaList in dataList[12: 12 + int(dataList[2])+1]:
+                                marioScore += 1
+                                theMaze = placeInMaze(theMaze, dataList[7])
+                                displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                                print("Mario's score -> {}.\n".format(marioScore))
+                            elif locaList in dataList[12 + int(dataList[2])+1:]:
+                                marioScore -= 1
+                                theMaze = placeInMaze(theMaze, dataList[7])
+                                displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                                print("Mario's score -> {}.\n".format(marioScore))
+                                
+                    # If Mario touches horizontal boundaries (stays in place)
+                    else:                            
+                        # If Mario touches horizontal boundary
+                        if hBoundary[1][col] == dataList[9]:
+                            row -=1
+                            theMaze = placeInMaze(theMaze, dataList[7])
+                            displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                            print("Mario's score -> {}.\n".format(marioScore))
+                        # If Mario touches exit gate 
+                        elif hBoundary[1][col] == dataList[8]:
+                            row -=1
+                            theMaze = placeInMaze(theMaze, dataList[7])
+                            displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                            print("Mario has reached the exit gate with a score of {}! You win!".format(marioScore))
+                            notDone = False
+      
+                elif askPosition.upper() == 'L':
+                    theMaze[row][col] = dataList[4]
+                    col -= 1
+                    # If Mario simply moves up in maze
+                    if col >= 0:
+                        if theMaze[row][col] == dataList[4]:
+                            theMaze = placeInMaze(theMaze, dataList[7])
+                            displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                            print("Mario's score -> {}.\n".format(marioScore))
+                        # If Mario encounters reward or exploding obstacle.
+                        elif theMaze[row][col] == dataList[5] or theMaze[row][col] == dataList[6]:
+                            locaList = str(row) + " " + str(col)
+                            if locaList in dataList[12: 12 + int(dataList[2])+1]:
+                                marioScore += 1
+                                theMaze = placeInMaze(theMaze, dataList[7])
+                                displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                                print("Mario's score -> {}.\n".format(marioScore))
+                            elif locaList in dataList[12 + int(dataList[2])+1:]:
+                                marioScore -= 1
+                                theMaze = placeInMaze(theMaze, dataList[7])
+                                displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                                print("Mario's score -> {}.\n".format(marioScore))
+
+                    # If Mario touches horizontal boundaries (stays in place)
+                    else:                            
+                        # If Mario touches vertical boundary
+                        col +=1
+                        theMaze = placeInMaze(theMaze, dataList[7])
+                        displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                        print("Mario's score -> {}.\n".format(marioScore))
+
+                elif askPosition.upper() == 'R':
+                    theMaze[row][col] = dataList[4]
+                    col += 1
+                    
+                    # If Mario simply moves right in maze
+                    if col <= mazeWidth - 1:
+                        if theMaze[row][col] == dataList[4]:
+                            theMaze = placeInMaze(theMaze, dataList[7])
+                            displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                            print("Mario's score -> {}.\n".format(marioScore))
+                        elif theMaze[row][col] == dataList[5] or theMaze[row][col] == dataList[6]:
+                            locaList = str(row) + " " + str(col)
+                            if locaList in dataList[12: 12 + int(dataList[2])+1]:
+                                marioScore += 1
+                                theMaze = placeInMaze(theMaze, dataList[7])
+                                displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                                print("Mario's score -> {}.\n".format(marioScore))
+                            elif locaList in dataList[12 + int(dataList[2])+1:]:
+                                marioScore -= 1
+                                theMaze = placeInMaze(theMaze, dataList[7])
+                                displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                                print("Mario's score -> {}.\n".format(marioScore))
+                    # If Mario touches horizontal boundaries (stays in place)
+                    else:                           
+                        col -=1
+                        theMaze = placeInMaze(theMaze, dataList[7])
+                        displayMaze(theMaze, mazeWidth, mazeHeight, hBoundary, dataList[10], int(dataList[3]))
+                        print("Mario's score -> {}.\n".format(marioScore))    
+                #exit game
+                elif askPosition.upper() == 'X':
+                    print("Mario's score -> {}.\n".format(marioScore))
+                    print("Thanks for playing! Bye bye.")
+                    notDone = False
+        else:
+            notDone = False
+            print("Mario's score is now down to 0! You have lost!")
+    else: notDone
+
+# End 
+print("\n------")
+
